@@ -41,7 +41,8 @@ evergreen rules into the ADRs and mark superseded entries historical.
   described here, not quoted.
 - **Post-review hardening (Gitar findings on PR #17):** keycloak proof now also asserts the oracle
   ACCEPTS the valid token (else a reject-everything oracle would still pass the forged-token proofs);
-  guarded the admin-token fetch + user-id lookup against opaque KeyError/IndexError; ES buggy proof
+  guarded the admin-token fetch, user-id lookup, AND the requiredActions/reset-password PUTs (Qodo
+  + CodeRabbit both independently flagged the unchecked PUTs post-ready) against opaque errors; ES buggy proof
   made deterministic via `refresh_interval=-1` on the test index + oracle `refresh=True` (no
   auto-refresh race); rabbit swallow → `contextlib.suppress` (Bandit B110). Gitar was the only tool
   with real signal here; Codacy ~98% noise (intentional insecure fixtures + missing-docstring

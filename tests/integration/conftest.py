@@ -427,14 +427,15 @@ def keycloak_oidc():
         if not found:
             raise RuntimeError(f"Keycloak user '{user}' not found after creation")
         uid = found[0]["id"]
-        requests.put(
-            f"{base}/admin/realms/{realm}/users/{uid}", headers=h, timeout=30,
-            json={"requiredActions": [], "emailVerified": True, "enabled": True},
-        )
-        requests.put(
-            f"{base}/admin/realms/{realm}/users/{uid}/reset-password", headers=h, timeout=30,
-            json={"type": "password", "value": password, "temporary": False},
-        )
+        for put_url, put_body in [
+            (f"{base}/admin/realms/{realm}/users/{uid}",
+             {"requiredActions": [], "emailVerified": True, "enabled": True}),
+            (f"{base}/admin/realms/{realm}/users/{uid}/reset-password",
+             {"type": "password", "value": password, "temporary": False}),
+        ]:
+            r = requests.put(put_url, json=put_body, headers=h, timeout=30)
+            if not r.ok:  # Keycloak returns 204 on success; surface a failure here, not downstream
+                raise RuntimeError(f"Keycloak user update PUT {put_url} -> {r.status_code}: {r.text[:400]}")
 
         issuer = f"{base}/realms/{realm}"
         jwks_url = f"{issuer}/protocol/openid-connect/certs"
