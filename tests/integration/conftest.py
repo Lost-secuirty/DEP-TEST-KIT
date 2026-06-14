@@ -311,7 +311,9 @@ def es_client(es_container):
     client = Elasticsearch(url)
     if client.indices.exists(index="docs"):
         client.indices.delete(index="docs")
-    client.indices.create(index="docs")
+    # refresh_interval=-1 disables auto-refresh, so a doc is searchable ONLY after an explicit
+    # refresh — makes the buggy "no refresh" proof deterministic instead of racing the 1s default.
+    client.indices.create(index="docs", settings={"refresh_interval": "-1"})
     try:
         yield client
     finally:
@@ -377,12 +379,15 @@ def keycloak_oidc():
         wait_for_logs(kc, "Running the server", timeout=120)
         base = f"http://{kc.get_container_host_ip()}:{kc.get_exposed_port(8080)}"
 
-        admin_tok = requests.post(
+        admin_resp = requests.post(
             f"{base}/realms/master/protocol/openid-connect/token",
             data={"grant_type": "password", "client_id": "admin-cli",
                   "username": "admin", "password": "admin"},
             timeout=30,
-        ).json()["access_token"]
+        )
+        if "access_token" not in admin_resp.json():
+            raise RuntimeError(f"Keycloak admin token -> {admin_resp.status_code}: {admin_resp.text[:400]}")
+        admin_tok = admin_resp.json()["access_token"]
         h = {"Authorization": f"Bearer {admin_tok}"}
         for url, body in [
             (f"{base}/admin/realms", {"realm": realm, "enabled": True}),
@@ -415,10 +420,13 @@ def keycloak_oidc():
         # block the password grant ("Account is not fully set up") even with a non-temporary
         # password in the create body. Fetch the user and explicitly clear required actions,
         # then set the password via the dedicated reset-password endpoint.
-        uid = requests.get(
+        found = requests.get(
             f"{base}/admin/realms/{realm}/users",
             params={"username": user, "exact": "true"}, headers=h, timeout=30,
-        ).json()[0]["id"]
+        ).json()
+        if not found:
+            raise RuntimeError(f"Keycloak user '{user}' not found after creation")
+        uid = found[0]["id"]
         requests.put(
             f"{base}/admin/realms/{realm}/users/{uid}", headers=h, timeout=30,
             json={"requiredActions": [], "emailVerified": True, "enabled": True},

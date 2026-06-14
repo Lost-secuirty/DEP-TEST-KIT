@@ -25,6 +25,7 @@ Self-test:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import shutil
 import sys
 import time
@@ -73,10 +74,8 @@ def remaining_after_failure(consumer: AckingConsumer, channel, queue: str, settl
     def boom(_body: bytes) -> None:
         raise RuntimeError("processing failed")
 
-    try:
+    with contextlib.suppress(Exception):
         consumer.process_one(queue, boom)
-    except Exception:
-        pass
     deadline = time.monotonic() + settle
     count = message_count(channel, queue)
     while count == 0 and time.monotonic() < deadline:

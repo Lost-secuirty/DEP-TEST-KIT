@@ -39,6 +39,13 @@ evergreen rules into the ADRs and mark superseded entries historical.
   GENERIC_SECRET_ASSIGNMENT) — shortened the name to under 16 chars rather than add an allowlist
   marker. Meta-gotcha: writing that identifier verbatim in this log ALSO trips the gate, so it is
   described here, not quoted.
+- **Post-review hardening (Gitar findings on PR #17):** keycloak proof now also asserts the oracle
+  ACCEPTS the valid token (else a reject-everything oracle would still pass the forged-token proofs);
+  guarded the admin-token fetch + user-id lookup against opaque KeyError/IndexError; ES buggy proof
+  made deterministic via `refresh_interval=-1` on the test index + oracle `refresh=True` (no
+  auto-refresh race); rabbit swallow → `contextlib.suppress` (Bandit B110). Gitar was the only tool
+  with real signal here; Codacy ~98% noise (intentional insecure fixtures + missing-docstring
+  minors); CodeRabbit/Qodo skip drafts; CodeQL 0.
 - Verified: 4 integration harnesses 12 passed (Docker); lib lane 54 passed / 3 skipped; ruff +
   deptry clean; uv audit 0 vulns (143 pkgs); 4 self-tests exit 0.
 

@@ -19,3 +19,11 @@ def test_proof_buggy_accepts_forged(keycloak_oidc) -> None:
     buggy = h.BuggyTokenVerifier(keycloak_oidc["jwks_url"], keycloak_oidc["issuer"],
                                  keycloak_oidc["audience"])
     assert h.accepts_token(buggy, keycloak_oidc["forged_token"]) is True
+
+
+def test_proof_oracle_accepts_valid(keycloak_oidc) -> None:
+    # Without this, an oracle that rejected *everything* would still pass the forged-token
+    # proofs; assert it accepts the genuine RS256 token so the rejection is real verification.
+    oracle = h.TokenVerifier(keycloak_oidc["jwks_url"], keycloak_oidc["issuer"],
+                             keycloak_oidc["audience"])
+    assert h.accepts_token(oracle, keycloak_oidc["valid_token"]) is True

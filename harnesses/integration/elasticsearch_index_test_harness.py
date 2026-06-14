@@ -7,9 +7,10 @@ dict) passes its read-after-write assertion, then intermittently returns empty
 results in production. Only a real ES exposes the missing refresh
 (a consistency/correctness failure a mock cannot model).
 
-HOW: `SearchStore.add` indexes with `refresh="wait_for"`, so an immediate search
-finds the document. `BuggySearchStore.add` omits the refresh — the same
-immediate search misses it. `read_after_write_consistent` returns whether the
+HOW: `SearchStore.add` indexes with `refresh=True`, forcing an immediate refresh so
+the search finds the document. `BuggySearchStore.add` omits the refresh — and with
+auto-refresh disabled on the test index (`refresh_interval=-1`), the same immediate
+search misses it deterministically. `read_after_write_consistent` returns whether the
 just-written doc is searchable; the proof shows oracle True / buggy False.
 
 WHERE: integration/ — needs a real ephemeral Elasticsearch (Docker). The
@@ -36,7 +37,7 @@ class SearchStore:
         self.index = index
 
     def add(self, doc_id: str, text: str) -> None:
-        self.client.index(index=self.index, id=doc_id, document={"text": text}, refresh="wait_for")
+        self.client.index(index=self.index, id=doc_id, document={"text": text}, refresh=True)
 
     def search(self, term: str) -> list[str]:
         res = self.client.search(index=self.index, query={"match": {"text": term}})
