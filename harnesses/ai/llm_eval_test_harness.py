@@ -29,14 +29,15 @@ import argparse
 import os
 import sys
 
-# Opt out of deepeval telemetry/anonymous reporting BEFORE importing it, so the lane
-# is hermetic (no network) regardless of the CI environment.
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
+
+# Opt out of deepeval telemetry/anonymous reporting (runtime hygiene). The import itself
+# is network-safe, so this is set after the imports — no module-level statement precedes
+# them, keeping the file free of E402 and any suppression.
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
 os.environ.setdefault("ERROR_REPORTING", "NO")
 os.environ.setdefault("DEEPEVAL_DISABLE_PROGRESS_BAR", "YES")
-
-from deepeval.metrics import BaseMetric  # noqa: E402  (import after env opt-out)
-from deepeval.test_case import LLMTestCase  # noqa: E402
 
 CONTEXT = ["The Eiffel Tower is in Paris.", "It was completed in 1889."]
 GROUNDED_ANSWER = "The Eiffel Tower is in Paris."
