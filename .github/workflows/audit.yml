@@ -2,33 +2,38 @@ name: Drift Audit
 
 # Audits every PR for "drift" — divergence between what was logged (commits, PR body,
 # docs/LEARNINGS.md) and what the diff actually did — using the deterministic
-# tools/audit_drift.py, and posts the report as a PR comment. Report-only: no
-# auto-fix push (least privilege; the auto-fix class lives in the pre-push preflight).
+# tools/audit_drift.py. Applies only safe ruff auto-fixes (the class never expands —
+# ADR-0003), appends to docs/audit-history.ndjson (so /audit-retro has data), pushes
+# both back to the PR branch, and posts the report as a comment.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Two racing runs on one ref can collide (this job pushes commits) — serialize per ref.
 concurrency:
   group: audit-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write # push safe auto-fixes + audit history back to the PR branch
   pull-requests: write # post the audit report comment
 
 jobs:
   audit:
     runs-on: ubuntu-latest
-    # Fork gate: GITHUB_TOKEN is read-only for fork PRs, so it can't comment.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Fork gate: GITHUB_TOKEN is read-only for fork PRs (can't comment/push). Actor
+    # guard: never run on this job's OWN bot pushes, or each auto-fix/history commit
+    # would retrigger the audit — a self-amplifying loop.
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'github-actions[bot]'
     timeout-minutes: 15
     steps:
+      # persist-credentials is required so the bot can push the history/auto-fix commit.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true # zizmor: ignore[artipacked]
 
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
@@ -37,12 +42,22 @@ jobs:
       - run: uv python install 3.12
       - run: uv sync --locked --all-extras
 
-      - name: Run drift audit (report only)
+      - name: Run drift audit (safe auto-fix + history)
         env:
           GITHUB_PR_BODY: ${{ github.event.pull_request.body }}
           GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_REF: ${{ github.base_ref }}
-        run: uv run python tools/audit_drift.py --base "origin/${BASE_REF}" --head HEAD --run-checks
+        run: uv run python tools/audit_drift.py --base "origin/${BASE_REF}" --head HEAD --fix --run-checks --history docs/audit-history.ndjson
+
+      - name: Commit & push auto-fixes + history (if any)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "audit: auto-fix + history"
+            git push
+          fi
 
       - name: Post audit report comment
         env:
