@@ -6,6 +6,7 @@ these in the repository UI; CI enforces the rest.
 ## Branch protection (`main`)
 - [ ] Require a pull request before merging (no direct pushes).
 - [ ] Require status checks to pass: `lib`, `supply-chain`, `integration`, `security-scan`.
+- [ ] Also require `Dependency Review` and `CodeQL` once their first runs land (new this batch).
 - [ ] Require branches to be up to date before merging.
 - [ ] Require linear history (optional but recommended).
 - [ ] Restrict who can push / dismiss reviews to the owner.
@@ -15,6 +16,8 @@ these in the repository UI; CI enforces the rest.
 - [ ] Dependency graph: **on** (needed for Renovate + advisories).
 - [ ] Private vulnerability reporting: **on** (per `SECURITY.md`).
 - [ ] Actions → "Allow <owner>, and select non-<owner>, actions" set to pinned SHAs only.
+- [ ] Code scanning: leave CodeQL **default setup off** — this repo runs the advanced
+      `codeql.yml` workflow instead (free on public repos).
 
 ## Automation
 - [ ] Install/enable **Renovate** (config at `.github/renovate.json`).
