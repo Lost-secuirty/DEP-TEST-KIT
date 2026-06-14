@@ -1,0 +1,60 @@
+[project]
+name = "dep-test-kit"
+version = "0.1.0"
+description = "Dependency-backed and real-service integration test harnesses — the non-stdlib companion to testing-kits."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Scott Roberts (lostsoulfs)" }]
+
+# Runtime deps are split by harness flavor. RULE: only declare a dependency once a
+# harness actually imports it — `deptry` (CI) fails on declared-but-unused packages,
+# so this list grows one entry per shipped harness, never speculatively.
+dependencies = []
+
+[project.optional-dependencies]
+# library-backed, in-process harnesses (no external services)
+lib = [
+  "hypothesis>=6.130",
+]
+# real-service harnesses (spin ephemeral containers; need Docker at run time)
+integration = [
+  "testcontainers>=4.14",
+  "psycopg[binary]>=3.2",
+]
+
+# PEP 735 dev tooling — not runtime, not scanned as harness imports.
+[dependency-groups]
+dev = [
+  "pytest>=8.2",
+  "pytest-xdist>=3.6",
+  "ruff>=0.8",
+  "deptry>=0.20",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["harnesses"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `integration` tests need Docker; the fast `lib` lane excludes them with -m "not integration".
+markers = [
+  "integration: requires Docker (real ephemeral service via testcontainers)",
+]
+
+[tool.deptry]
+# deptry scans the `harnesses/` package; pytest plugins are never imported directly.
+known_first_party = ["harnesses"]
+[tool.deptry.per_rule_ignores]
+# testcontainers + psycopg are used by the integration harness's fixtures and tests
+# (tests/integration), not imported in harnesses/ itself (the store uses the injected
+# connection); pytest-xdist is a pytest plugin, never imported directly.
+DEP002 = ["pytest-xdist", "testcontainers", "psycopg"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

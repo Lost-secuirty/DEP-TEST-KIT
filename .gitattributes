@@ -1,0 +1,4 @@
+# Normalize line endings; keep the lockfile diffable.
+* text=auto eol=lf
+uv.lock text eol=lf
+*.png binary

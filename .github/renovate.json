@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "minimumReleaseAge": "7 days",
+  "packageRules": [
+    {
+      "description": "Pin GitHub Actions to full commit SHAs.",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Environments
+.venv/
+venv/
+
+# uv (the lockfile IS committed; the cache is not)
+.uv/
+
+# Generated artifacts
+sbom.cdx.json
+*.sbom.json
+dist/
+build/
+
+# OS / editor
+.DS_Store
+*.swp
