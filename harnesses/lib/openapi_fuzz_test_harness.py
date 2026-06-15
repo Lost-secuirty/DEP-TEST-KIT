@@ -62,6 +62,9 @@ SCHEMA: dict[str, Any] = {
 ORACLE_COUNT: Any = 1  # conforms: integer
 BUGGY_COUNT: Any = "oops"  # drift: string where the contract promises an integer
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["conforms_to_contract"]
+
 
 def _make_app(count_value: Any) -> Flask:
     app = Flask(__name__)

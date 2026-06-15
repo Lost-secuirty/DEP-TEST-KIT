@@ -42,6 +42,11 @@ class PermanentError(Exception):
 
 MAX_ATTEMPTS = 3
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+# oracle_policy is NOT load-bearing in the self-test (a do-nothing policy also "doesn't
+# over-retry"); the discriminating predicate retries_permanent is, so it is the target.
+VACUITY_TARGETS = ["retries_permanent"]
+
 
 def oracle_policy() -> tenacity.Retrying:
     """Retries ONLY transient errors, capped at MAX_ATTEMPTS."""

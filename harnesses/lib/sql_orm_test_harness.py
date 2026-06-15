@@ -31,6 +31,9 @@ from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, declarative_base
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["allows_duplicate"]
+
 
 def build_model(unique: bool):
     """Build a fresh declarative base + User model. A new base per call avoids

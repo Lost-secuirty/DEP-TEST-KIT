@@ -34,6 +34,9 @@ import respx
 URL = "https://upstream.test/resource"
 Fetch = Callable[[str], Awaitable[str]]
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["fetch_with_retry"]
+
 
 # --- ORACLE: retries transient 503s and transport errors ------------------------
 async def fetch_with_retry(url: str, attempts: int = 3) -> str:

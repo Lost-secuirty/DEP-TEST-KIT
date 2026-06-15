@@ -50,6 +50,9 @@ _CORPUS = {
 # Topic terms the question is "about"; a chunk is relevant if it shares one.
 _KEY_TERMS = {"eiffel", "tower", "completed", "1889"}
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["retrieval_is_precise"]
+
 
 def oracle_retrieve(question: str) -> list[str]:
     """ORACLE: returns the chunk that actually pertains to the question."""

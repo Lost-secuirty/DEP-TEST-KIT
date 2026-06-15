@@ -56,6 +56,9 @@ _PLUGINS = {
     ]
 }
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["misses_real_secrets"]
+
 
 def detect_secrets_count(text: str) -> int:
     """ORACLE: count secrets found by detect-secrets across all lines."""

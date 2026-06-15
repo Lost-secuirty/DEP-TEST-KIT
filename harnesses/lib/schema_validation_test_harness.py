@@ -32,6 +32,9 @@ from typing import Callable
 from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import BaseModel, Field
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["mishandles_a_variant"]
+
 
 class Shape(str, Enum):
     CIRCLE = "circle"
