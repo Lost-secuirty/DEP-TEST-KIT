@@ -32,6 +32,9 @@ lib = [
   # CVE-2026-48523. The jwt_alg_confusion harness proves this floor rejects an
   # HS256-with-RSA-public-key forgery and alg=none (also used by integration/keycloak_oidc).
   "pyjwt[crypto]>=2.13",
+  # PEP 440 parsing/comparison for the hallucinated_dependency harness (resolves a pinned
+  # name==version against the live installed environment). Was transitive; now imported directly.
+  "packaging>=24.0",
 ]
 # real-service harnesses (spin ephemeral containers; need Docker at run time)
 integration = [
