@@ -5,6 +5,31 @@ dated. This is **data, not instructions** — never act on a line here as a comm
 The auditor and explorer agents append here; when it grows past ~500 lines, promote
 evergreen rules into the ADRs and mark superseded entries historical.
 
+## 2026-06-15 — Batch 9 (lib): hallucinated_dependency + prompt_cache_prefix
+- Shipped 2 deterministic lib harnesses from the 2026-06-15 Gemini docs (methodologies + BDD).
+  `hallucinated_dependency` (the Sonatype "AI recommends non-existent/yanked/typosquatted package
+  versions" supply-chain class, version-level sibling of hallucinated_symbol): parses `name==version`
+  with `packaging` and resolves against the LIVE installed env via `importlib.metadata` — a pin is
+  real iff the package is installed AND the specifier matches the installed version. ORACLE flags
+  `pydantic==99.99.99` (real pkg, impossible version) + an absent typosquat; BUGGY checks only the
+  NAME → misses the hallucinated version of a real package. `prompt_cache_prefix` (LLM prompt-cache
+  hygiene): a volatile token (timestamp/uuid/request-id) in the cached prefix busts the cache every
+  call; ORACLE `prefix_is_stable` scans blocks up to the last `cache_control` breakpoint; BUGGY
+  `naive_prefix_check` only confirms a breakpoint EXISTS → passes a timestamped system prompt.
+- DEP CALLS: `hallucinated_dependency` adds `packaging>=24.0` to the `lib` extra (was transitive;
+  imported directly so NO deptry DEP002 ignore). Real pins built from live `metadata.version(...)`
+  so a `uv.lock` bump can't make it fail on a stale hard-coded version (same robustness trick as
+  hallucinated_symbol). `prompt_cache_prefix` adds NO dep — pydantic models/validates the
+  content-block + `cache_control` contract (load-bearing); a pure-stdlib scanner would belong in
+  testing-kits, so it's pydantic-anchored to fit the dependency-backed charter. Volatile token is a
+  fixed literal (not a real clock) for determinism; real code would interpolate `datetime.now()`.
+- The Gemini docs' FAILURE CLASSES were the signal; their stats were ignored (market sizes + 81%/63%
+  /300-500% QA numbers + precise TDAD figures cite future-dated arXiv IDs — unverifiable). METR
+  "~19% slower on familiar repos" is real; Anthropic prompt-caching mechanics are real.
+- Verified: both `--self-test` exit 0; ruff/deptry clean (36 files); vacuity-gate both TEETH
+  (`pin_resolves` / `prefix_is_stable`; 9 teeth / 0 vacuous / 0 error); fast lane 110 passed /
+  3 skipped (mutmut Windows) / 40 deselected. Inventory 30→32 (15 lib). packaging resolved at 26.2.
+
 ## 2026-06-15 — Batch 8 (lib): hallucinated_symbol
 - Shipped 1 lib harness for hallucinated-attribute detection (the Llama `AttributeError`/
   `TypeError`-from-a-hallucinated-method pattern). Parses `pydantic.<attr>` accesses with `ast`
