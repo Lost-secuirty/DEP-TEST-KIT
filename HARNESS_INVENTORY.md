@@ -1,6 +1,6 @@
 # Harness Inventory
 
-**Total: 30 harnesses** (13 lib, 11 integration, 6 ai). This repo grows in batches of ≤6;
+**Total: 32 harnesses** (15 lib, 11 integration, 6 ai). This repo grows in batches of ≤6;
 see `HARNESS_ROADMAP.md` for what's next. Every harness ships a paired test and a
 planted-bug **proof** test, and documents WHY / HOW / WHERE in its module docstring.
 
@@ -153,6 +153,31 @@ planted-bug **proof** test, and documents WHY / HOW / WHERE in its module docstr
   `__all__`, pinned to `importlib.metadata.version`) and flags `pydantic.BaseModelz` /
   `field_validatorr`; the naive checker only verifies the module imports and misses them; the
   oracle stays clean on real code (`pydantic.BaseModel`, `field_validator`).
+
+### hallucinated_dependency — live installed-version resolution vs naive name-only check (packaging)
+- **File:** `harnesses/lib/hallucinated_dependency_test_harness.py`
+- **Tests:** `tests/lib/test_hallucinated_dependency_test_harness.py` (+ `_proof.py`)
+- **Dep:** `packaging` (PEP 440 parsing/comparison) + live `importlib.metadata`
+- **Why:** LLM-generated manifests pin packages to versions that were never published — the
+  Sonatype "AI recommends non-existent / yanked / typosquatted versions" supply-chain class, the
+  version-level sibling of `hallucinated_symbol`. A naive "is the package name installed?" gate
+  passes because the *package* is real; only the pinned *version* is hallucinated. `uv audit`
+  catches known-CVE versions, not versions that never existed.
+- **Proof:** the oracle resolves each `name==version` against the live installed environment and
+  flags `pydantic==99.99.99` (real package, impossible version) and an absent typosquat; the naive
+  name-only checker misses the hallucinated version of the real package. Oracle clean on real pins.
+
+### prompt_cache_prefix — volatile content in the cached prompt prefix vs naive breakpoint check (pydantic)
+- **File:** `harnesses/lib/prompt_cache_prefix_test_harness.py`
+- **Tests:** `tests/lib/test_prompt_cache_prefix_test_harness.py` (+ `_proof.py`)
+- **Dep:** `pydantic` (validates the content-block + `cache_control` contract)
+- **Why:** LLM prompt caching only pays off if the cached prefix is byte-stable. A timestamp /
+  request-id / uuid interpolated into a prefix block busts the cache every call — full price, full
+  latency — while a naive check ("did we set a `cache_control` breakpoint?") passes, because the
+  breakpoint exists; it just protects nothing.
+- **Proof:** the oracle flags a session timestamp baked into the cached system block (`buggy_prompt`)
+  and clears a prompt that keeps volatile content in the dynamic suffix (`stable_prompt`); the naive
+  breakpoint-exists check passes the buggy prompt. Deterministic — no live LLM, no API key.
 
 ## integration (real ephemeral service, needs Docker)
 

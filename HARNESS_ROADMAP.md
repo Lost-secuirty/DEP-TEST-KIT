@@ -29,6 +29,9 @@ unused declarations), and ships a planted-bug proof test.
   verbatim-span citation predicate).
 - Batch 8 (lib) — **complete**: `hallucinated_symbol` (pydantic, live-surface attribute
   resolution vs a naive module-only check).
+- Batch 9 (lib) — **complete**: `hallucinated_dependency` (packaging, live installed-version
+  resolution vs a naive name-only check), `prompt_cache_prefix` (pydantic, volatile content in
+  the cached prompt prefix vs a naive breakpoint-exists check).
 
 ## Batch 1 — lib (library-backed, in-process) ✅ complete
 Source: research T1 (testing-library ecosystem survey).
@@ -156,6 +159,24 @@ Note: introspects the live installed pydantic surface (`hasattr` honors PEP 562 
 C-extension members; `__all__` for re-exports), pinned to `importlib.metadata.version`. No new
 dependency (pydantic already in the `lib` extra). Scope is single-level `pydantic.<attr>`;
 multi-level chains and a general any-package resolver are a noted follow-on.
+
+## Batch 9 — lib (dependency surface + LLM-app hygiene) ✅ complete
+Source: the 2026-06-15 Gemini docs ("AI Development Methodologies 2026" + "AI and BDD in 2026").
+Both deterministic, in-process, dependency-backed. The docs' *failure classes* were the useful
+signal; their market/percentage statistics were treated as unverified and ignored.
+
+| Candidate | Dep | Failure class | Status |
+|-----------|-----|---------------|--------|
+| `hallucinated_dependency` | packaging | a pinned `name==version` that was never published (hallucinated version of a real package, or a typosquat), missed by a naive "is the name installed?" check — the Sonatype AI-supply-chain class, version-level sibling of `hallucinated_symbol` | ✅ shipped |
+| `prompt_cache_prefix` | pydantic | volatile content (timestamp / request-id / uuid) baked into the cached prompt prefix busts the cache every call, missed by a naive "a `cache_control` breakpoint exists" check | ✅ shipped |
+
+Note: `hallucinated_dependency` adds `packaging` to the `lib` extra (PEP 440 parsing; was
+transitive, now direct) and resolves pins against the LIVE installed environment, so real pins are
+built from live versions and survive `uv.lock` bumps. `prompt_cache_prefix` adds no dependency
+(pydantic models/validates the content-block + `cache_control` contract) — a pure-stdlib string
+scanner would belong in `testing-kits`. Out of scope from these docs (platform/agent work, not
+harnesses): SDD frameworks (CURRANTE / Spec-Kit / OpenSpec), MemCoder / Codified Context / Active
+Context Compression, OpenDev, SWE-CI, and the agentic test-automation vendor matrix.
 
 ## Notes
 - **Batch naming:** a batch number is assigned when its harnesses ship and is never reused or
