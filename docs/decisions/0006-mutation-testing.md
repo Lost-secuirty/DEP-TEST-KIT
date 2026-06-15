@@ -53,3 +53,12 @@ a vacuous one that must be detected) via `--self-test`.
   Promote to required once no lib+ai harness is `UNMAPPED`.
 - `mutation_quality` (the mutmut harness) stays as-is — it remains the real-mutmut signal on
   Linux/WSL; the vacuity gate is the complementary cross-platform per-harness teeth check.
+- **Soundness limitation (known, by design):** the inert stand-in returns a unique sentinel, so
+  for some harnesses the neutered run goes red via a *type-crash* the moment the sentinel is
+  touched (e.g. `sentinel.startswith`), not via the harness's correctness assertion firing. A
+  green control run guarantees the redness is caused by the oracle neuter (the only change), so
+  the gate soundly proves the oracle symbol is **load-bearing/reachable** — but it does NOT prove
+  the self-test would catch every wrong-but-non-crashing oracle, and a self-test that crashed in
+  unrelated setup would also read TEETH. This is weaker than true mutation testing (`mutmut`,
+  which substitutes plausible non-crashing mutants); the two are complementary. Distinguishing
+  "red via assertion" from "red via crash" is possible future work.

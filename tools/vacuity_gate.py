@@ -76,7 +76,11 @@ def _worker(module_ref: str, targets: list[str]) -> int:
         _neuter(module, target)
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
-        return int(module.run_self_test())
+        result = module.run_self_test()
+    # A self-test returns 0 (green) / 1 (red). Coerce a bare ``None`` (a function that
+    # falls off the end) to 0 rather than crashing the worker — int(None) would TypeError
+    # and a green control harness would be misread as ERROR during the VACUITY_TARGETS rollout.
+    return 0 if result is None else int(result)
 
 
 def _run_worker(module_ref: str, targets: list[str]) -> int:
@@ -88,6 +92,12 @@ def _run_worker(module_ref: str, targets: list[str]) -> int:
 
 
 def _classify(module_ref: str, targets: list[str]) -> str:
+    # SOUNDNESS NOTE: control must be green, then any non-zero neutered run is TEETH —
+    # including a red that comes from a type-crash when the inert sentinel is touched (not
+    # only from the harness's assertion firing). The control-vs-neutered delta keeps this
+    # honest (the ONLY change is the oracle neuter), but the gate proves the oracle is
+    # load-bearing/reachable, not that the self-test would catch every wrong-but-non-crashing
+    # oracle. Limitation documented in docs/decisions/0006-mutation-testing.md.
     control = _run_worker(module_ref, [])          # no neuter — harness should be green
     if control != 0:
         return "ERROR"                              # self-test already red without us
