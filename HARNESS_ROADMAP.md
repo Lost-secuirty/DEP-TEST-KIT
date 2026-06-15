@@ -27,6 +27,8 @@ unused declarations), and ships a planted-bug proof test.
   authorization differential).
 - Batch 7 (ai) — **complete**: `judge_reliability` (deepeval, LLM-judge variance gate +
   verbatim-span citation predicate).
+- Batch 8 (lib) — **complete**: `hallucinated_symbol` (pydantic, live-surface attribute
+  resolution vs a naive module-only check).
 
 ## Batch 1 — lib (library-backed, in-process) ✅ complete
 Source: research T1 (testing-library ecosystem survey).
@@ -140,6 +142,20 @@ Note: no new dependency (deepeval already in the `ai` extra). Both pillars are m
 with no second LLM — verdict dispersion across N runs, and a normalized verbatim-substring span
 predicate with a minimum length so a trivial token cannot satisfy it. Complements (does not
 replace) `geval_rubric`; hardening `geval_rubric`/`metamorphic_stability` is a noted follow-on.
+
+## Batch 8 — lib (dependency surface) ✅ complete
+Source: the 2026-06-15 idea backlog. LLM codegen invents attributes on real packages (the
+Llama `AttributeError` pattern); static type-checkers go blind on untyped/C-extension/dynamic
+surfaces. Anchored on a real dependency (NOT pure stdlib — that would belong in `testing-kits`).
+
+| Candidate | Dep | Failure class | Status |
+|-----------|-----|---------------|--------|
+| `hallucinated_symbol` | pydantic | a hallucinated `pkg.<attr>` that does not exist on the live, version-pinned package surface, missed by a naive "does the module import?" check | ✅ shipped |
+
+Note: introspects the live installed pydantic surface (`hasattr` honors PEP 562 `__getattr__` +
+C-extension members; `__all__` for re-exports), pinned to `importlib.metadata.version`. No new
+dependency (pydantic already in the `lib` extra). Scope is single-level `pydantic.<attr>`;
+multi-level chains and a general any-package resolver are a noted follow-on.
 
 ## Notes
 - **Batch naming:** a batch number is assigned when its harnesses ship and is never reused or
