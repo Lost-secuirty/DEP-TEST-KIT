@@ -22,6 +22,8 @@ unused declarations), and ships a planted-bug proof test.
   `elasticsearch_index` (elasticsearch), `rabbitmq_redelivery` (pika), `keycloak_oidc` (pyjwt).
 - Batch 5 (ai) — **complete**: `rag_faithfulness` (deepeval, context precision),
   `geval_rubric` (deepeval, deterministic rubric grader), `metamorphic_stability` (hypothesis).
+- Batch 7 (ai) — **complete**: `judge_reliability` (deepeval, LLM-judge variance gate +
+  verbatim-span citation predicate).
 
 ## Batch 1 — lib (library-backed, in-process) ✅ complete
 Source: research T1 (testing-library ecosystem survey).
@@ -107,6 +109,20 @@ Out of scope for this harness library (platform/agent work, not testing harnesse
 agent protocols (MCP/A2A/ACP/SDE), orchestration stacks (LangGraph/CrewAI/AutoGen),
 and tracing (Arize Phoenix / OpenTelemetry — the `log.sh` JSONL is the lightweight
 stand-in already in `.claude/hooks/`).
+
+## Batch 7 — ai (judge reliability) ✅ complete
+Source: the 2026-06-15 idea backlog (`project_dep_test_kit_retro.md` flagged the 3 prior ai
+harnesses as circular / stable-by-construction). This one tests the *judge itself*, fusing two
+pillars no mainstream eval tool packages together. Deterministic, no live LLM / no API key.
+
+| Candidate | Dep | Failure class | Status |
+|-----------|-----|---------------|--------|
+| `judge_reliability` | deepeval | an LLM-judge that is non-deterministic across identical runs (variance) OR content-blind (cites no verbatim span) — both invisible to a structural/G-Eval check | ✅ shipped |
+
+Note: no new dependency (deepeval already in the `ai` extra). Both pillars are machine-checkable
+with no second LLM — verdict dispersion across N runs, and a normalized verbatim-substring span
+predicate with a minimum length so a trivial token cannot satisfy it. Complements (does not
+replace) `geval_rubric`; hardening `geval_rubric`/`metamorphic_stability` is a noted follow-on.
 
 ## Notes
 - **Batch naming:** a batch number is assigned when its harnesses ship and is never reused or
