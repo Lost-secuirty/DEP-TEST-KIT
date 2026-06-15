@@ -32,6 +32,9 @@ import time_machine
 EXPIRY = dt.datetime(2030, 1, 1, 0, 0, 0, tzinfo=dt.timezone.utc)
 Check = Callable[[dt.datetime], bool]
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["is_valid_oracle"]
+
 
 def _now() -> dt.datetime:
     return dt.datetime.now(tz=dt.timezone.utc)

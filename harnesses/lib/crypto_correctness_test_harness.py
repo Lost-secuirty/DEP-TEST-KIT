@@ -33,6 +33,9 @@ from typing import Tuple
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["AeadBox.decrypt"]
+
 
 # --- ORACLE: authenticated encryption (AES-GCM) ---------------------------------
 class AeadBox:

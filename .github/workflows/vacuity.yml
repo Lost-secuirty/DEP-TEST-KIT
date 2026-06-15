@@ -1,4 +1,4 @@
-name: Vacuity (advisory)
+name: Vacuity
 
 on:
   pull_request:
@@ -14,12 +14,15 @@ permissions:
 
 jobs:
   vacuity:
-    name: Vacuous-green meta-gate (advisory, non-blocking)
+    name: Vacuous-green meta-gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Advisory while VACUITY_TARGETS rolls out across all lib+ai harnesses (ADR-0006).
-    # Promote to required once every mapped harness reads TEETH (no UNMAPPED in the lib+ai set).
-    continue-on-error: true
+    # Enforced (no continue-on-error): every lib+ai harness is mapped and reads TEETH, the
+    # documented promotion trigger (ADR-0006). The ONE exception, mutation_quality, is
+    # intentionally UNMAPPED (advisory) — it env-skips on native Windows, so the gate cannot
+    # classify it; its teeth come from the dedicated `mutation` lane. UNMAPPED is advisory, so
+    # the gate still exits 0. Final step (owner action): add "Vacuous-green meta-gate" to the
+    # branch-protection required checks to make it merge-blocking.
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:

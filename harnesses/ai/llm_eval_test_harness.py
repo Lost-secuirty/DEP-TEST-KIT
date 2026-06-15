@@ -43,6 +43,9 @@ CONTEXT = ["The Eiffel Tower is in Paris.", "It was completed in 1889."]
 GROUNDED_ANSWER = "The Eiffel Tower is in Paris."
 HALLUCINATED_ANSWER = "The Eiffel Tower is in Berlin."
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["answer_is_faithful"]
+
 
 class ContextFaithfulnessMetric(BaseMetric):
     """Deterministic faithfulness: the share of the answer's sentence-claims that

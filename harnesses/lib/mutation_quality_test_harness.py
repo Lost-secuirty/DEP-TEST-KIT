@@ -37,6 +37,12 @@ from pathlib import Path
 # must only ever run inside the throwaway temp project below — never the repo root.
 _MUTMUT = str(Path(sys.executable).parent / "mutmut")
 
+# NOTE: intentionally NO VACUITY_TARGETS. This harness env-skips on native Windows (mutmut,
+# boxed/mutmut#397), so run_self_test() returns 0 (skip) there and the vacuity gate cannot
+# classify it locally (a mapped target would read VACUOUS on Windows where nothing actually
+# ran). Mutation testing IS its own teeth-check — the weak-suite-survivors>0 guard below plus
+# the dedicated `mutation` CI lane (Linux). It stays UNMAPPED by design; see ADR-0006.
+
 
 def mutmut_available() -> bool:
     """mutmut 3.x refuses to run on native Windows (boxed/mutmut#397); Linux/CI/WSL is

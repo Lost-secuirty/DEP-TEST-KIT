@@ -38,7 +38,7 @@ vacuity:         ## vacuous-green meta-gate: neuter each mapped harness's oracle
 sbom:            ## generate a CycloneDX SBOM
 	uvx cyclonedx-py environment "$$(uv python find)" --output-format json -o sbom.cdx.json
 
-all: sync lint deptry test selftest audit
+all: sync lint deptry test selftest vacuity audit
 
 review:          ## pre-push: mechanical gates, then run the MoE audit panel by hand
 	$(MAKE) all

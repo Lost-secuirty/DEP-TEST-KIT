@@ -46,6 +46,9 @@ _OPS: dict[str, Callable[[str], str]] = {
     "strip_qmark": lambda q: q.rstrip("?"),
 }
 
+# Symbol the vacuous-green meta-gate (tools/vacuity_gate.py) neuters to confirm teeth.
+VACUITY_TARGETS = ["unstable_under_perturbation"]
+
 
 def _normalize(q: str) -> frozenset[str]:
     """Case/punctuation/whitespace-insensitive token set — the meaning-bearing content."""
