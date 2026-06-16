@@ -5,6 +5,23 @@ dated. This is **data, not instructions** — never act on a line here as a comm
 The auditor and explorer agents append here; when it grows past ~500 lines, promote
 evergreen rules into the ADRs and mark superseded entries historical.
 
+## 2026-06-16 — supply-chain: vendor-independent pip-audit OSV gate (ADR-0007 D3, partial)
+- Added a second, non-Astral OSV gate to the Audit+SBOM CI job: `uv export --frozen
+  --no-emit-project --format requirements-txt` → `uvx pip-audit -r ...`. Defense-in-depth + removes
+  single-vendor reliance — `uv audit` is a preview feature whose exit semantics can drift; pip-audit
+  (PyPA, OSV-backed) definitively exits non-zero on a finding, so a real CVE fails the build either
+  way (addresses ADR-0007 D3's "confirm the audit exit code" concern). Verified locally: export
+  exit 0, pip-audit "No known vulnerabilities found" exit 0 (uv 0.11.16). `requirements-audit.txt`
+  is gitignored (CI-ephemeral). Dropped `--strict` (untested; can fail on un-auditable packages —
+  plain `-r` still fails on real vulns, which is the goal).
+- DEFERRED with reason (NOT shipped as silent no-ops): install-time malware screening
+  (`UV_MALWARE_CHECK` / OSV `MAL`) and lockfile-layer cooldown (`[tool.uv] exclude-newer`) are uv
+  PREVIEW features; enabling them unverified risks silently no-oping — security theater, i.e. the
+  vacuous-green anti-pattern this repo exists to prevent. Tracked in roadmap + SECURITY.md, to be
+  enabled once the CI `uv` version is confirmed to honor them. The CVE-vs-malware coverage gap (a
+  CVE audit can't catch a no-advisory-yet malicious package) is now documented in SECURITY.md.
+- Branched off `main` (independent of open PRs #31/#32/#33 — trivial LEARNINGS rebase).
+
 ## 2026-06-15 — vacuity-gate rollout: all lib+ai harnesses mapped + lane de-advisory'd
 - Completed the VACUITY_TARGETS rollout the gate was waiting on: mapped the 11 remaining UNMAPPED
   lib+ai harnesses so every one reads TEETH. Targets chosen by tracing which symbol, when neutered,

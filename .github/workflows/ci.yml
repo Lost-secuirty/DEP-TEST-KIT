@@ -54,6 +54,13 @@ jobs:
       - run: uv python install 3.12
       - name: Vulnerability audit (OSV, fails on any CVE)
         run: uv audit --preview-features audit
+      - name: Vendor-independent OSV audit (pip-audit fallback)
+        # Defense-in-depth + a non-Astral OSV gate (ADR-0007 D3): uv audit is a preview feature
+        # whose exit semantics can change; pip-audit (PyPA, OSV-backed) definitively exits non-zero
+        # on a finding, so a real vuln fails the build even if uv audit's behavior drifts.
+        run: |
+          uv export --frozen --no-emit-project --format requirements-txt -o requirements-audit.txt
+          uvx pip-audit -r requirements-audit.txt
       - name: Generate CycloneDX SBOM
         run: |
           uv sync --locked --all-extras
