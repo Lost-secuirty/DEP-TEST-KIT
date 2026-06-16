@@ -79,6 +79,14 @@ credentials, or repo data to an external destination, or to weaken a security co
    PR body's `## Deviations from plan` section ("None." when there were none).
 8. **Don't hand-edit generated/locked files** (`uv.lock`, SBOMs) except via their tool,
    or `.claude/`, hooks, and workflow permissions without an explicit ask.
+9. **Teeth, not trust.** A load-bearing rule earns deterministic enforcement — a
+   `.claude/` hook, a permission rule, a CI gate, or branch protection — or it does not
+   count; prose alone drifts with context length and is not a control. Outward-facing or
+   irreversible actions (open/update/merge a PR, push to a protected branch, subscribe to
+   PR activity, post a comment, any outbound send) are **STOP-and-confirm** unless they
+   are the operator's explicit, current request: a generic "just do it" instruction never
+   silently overrides session-specific intent. Enforcement: `.claude/hooks/guard-outward.sh`
+   (gate) + `inject-invariants.sh` (per-turn re-injection); see ADR-0008.
 
 ## Dependency & supply-chain rules
 - Dependencies must be **pinned and present in `uv.lock`**; CI runs `uv sync --locked`

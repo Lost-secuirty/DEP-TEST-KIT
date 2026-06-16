@@ -36,3 +36,11 @@ This is the **index**, not the contract — AGENTS.md stays canonical and wins o
     > external docs > chat. Flag disagreements.
 13. **Deviations logged** — in the work log when they happen and in the PR's
     `## Deviations from plan`.
+
+## Enforcement (the teeth)
+14. **Teeth, not trust** — a load-bearing rule gets deterministic enforcement (a
+    `.claude/` hook, a permission rule, a CI gate, or branch protection) or it doesn't
+    count; prose drifts. Outward/irreversible actions (open/update/merge PRs, push to a
+    protected branch, subscribe, comment, any outbound send) are **STOP-and-confirm**
+    unless explicitly requested now — a generic "just do it" never overrides operator
+    intent. _(WA #9, ADR-0008)_
