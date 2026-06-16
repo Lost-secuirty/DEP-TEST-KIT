@@ -34,7 +34,15 @@ _SECRET_RES = [
     (
         "GENERIC_SECRET_ASSIGNMENT",
         re.compile(
-            r"(?i)\b(?:api[_-]?key|secret|token|passwd|password|access[_-]?key)\b"
+            # The keyword may be prefixed (client_secret, x-access-token,
+            # refresh_token): a leading \b missed those because '_' is a word
+            # char, so \bsecret\b never matched inside "client_secret". Use a
+            # non-alnum lookbehind and list the common compound forms first.
+            # (Closes the gap noted in the 2026-06-15 DEP-TEST-KIT retro.)
+            r"(?i)(?<![a-z0-9])"
+            r"(?:client[_-]?secret|access[_-]?token|refresh[_-]?token|auth[_-]?token|"
+            r"private[_-]?key|secret[_-]?key|api[_-]?key|access[_-]?key|"
+            r"secret|token|passwd|password|bearer)"
             r"\s*[:=]\s*['\"]?[A-Za-z0-9_\-/+=]{16,}"
         ),
     ),
@@ -51,7 +59,16 @@ def scan_line(line: str) -> list[str]:
 
 
 def _git(args: list[str]) -> str:
-    out = subprocess.run(["git"] + args, capture_output=True, text=True, check=False)
+    # Force UTF-8 decode: on Windows the default locale codec is cp1252, which
+    # crashes on UTF-8 diff content (non-ASCII in docs/code). Linux/CI default UTF-8.
+    out = subprocess.run(
+        ["git"] + args,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
     return out.stdout
 
 
@@ -102,20 +119,26 @@ def _scan(diff_args: list[str]) -> int:
 
 
 def _run_self_test() -> int:
-    # Fixtures assembled from parts so this file does not trip its own gate.
+    # Fixtures assembled from parts so this file does not trip its own gate
+    # (keyword, separator, and value are kept in separate concatenated pieces).
     aws = "AKIA" + "IOSFODNN7EXAMPLE"
     ghp = "ghp_" + ("a" * 36)
     pem = "-----BEGIN " + "RSA PRIVATE KEY-----"
     slack = "xoxb-" + "1234567890-abcdefXYZ"
     gkey = "AIza" + ("b" * 35)
     generic = "api_key" + " = " + "'" + ("A" * 20) + "'"
-    must_block = [aws, ghp, pem, slack, gkey, generic]
+    # Compound-keyword cases the old \b-anchored regex MISSED (retro fix):
+    client_secret = "client_secret" + " = " + "'" + ("A" * 24) + "'"
+    access_token = "access_token" + " = " + ("B" * 32)
+    must_block = [aws, ghp, pem, slack, gkey, generic, client_secret, access_token]
 
     must_clean = [
-        "this line mentions an api_key in passing",  # keyword, no value
-        "uses ${{ secrets.GITHUB_TOKEN }} in CI",  # CI ref, not a literal
+        "this line mentions an api_key in passing",     # keyword, no value
+        "uses ${{ secrets.GITHUB_TOKEN }} in CI",       # CI ref, not a literal
         "a normal line of prose about tokens",
-        aws + "  " + _ALLOWLIST_MARKER,  # escape hatch
+        "refresh_token_url" + " = " + "'https://idp.example.com/oauth'",  # URL value, not a secret
+        "hash" + " = " + "'sha256:" + ("e" * 64) + "'",  # uv.lock digest, not a secret
+        aws + "  " + _ALLOWLIST_MARKER,                 # escape hatch
     ]
 
     fails = 0
