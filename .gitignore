@@ -17,6 +17,7 @@ venv/
 sbom.cdx.json
 *.sbom.json
 audit-report.md
+requirements-audit.txt
 dist/
 build/
 # coverage data (the lib lane runs pytest --cov; report-only, never committed)

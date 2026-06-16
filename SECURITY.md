@@ -25,3 +25,13 @@ directly. Do not file public issues for undisclosed vulnerabilities.
 Dependency updates flow through Renovate with a release-age cooldown. SBOMs (CycloneDX)
 are generated in CI for observability. The goal is reproducible installs whose exact
 transitive graph is known and auditable at any time.
+
+**Vulnerability auditing is layered (ADR-0007 D3):** `uv audit` (OSV) is the primary gate, and
+a vendor-independent `pip-audit` (PyPA, OSV-backed) runs alongside it in CI on the exported
+lockfile — so a real CVE fails the build even if `uv audit`'s preview exit-semantics drift, and the
+pipeline is not blind to a single tool (the stack is otherwise Astral-centric). **Known coverage
+limit:** a CVE audit does **not** catch a freshly-published *malicious* package that has no advisory
+yet (the 2026 install-time-execution class). Install-time malware screening (`UV_MALWARE_CHECK` /
+OSV `MAL`) and a lockfile-layer resolution cooldown (`[tool.uv] exclude-newer`) are the intended
+next layers — tracked in `HARNESS_ROADMAP.md`, to be enabled once the CI `uv` version is confirmed
+to support them (a control that silently no-ops is worse than none).
