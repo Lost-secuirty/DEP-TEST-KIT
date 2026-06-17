@@ -7,7 +7,6 @@ on a policy violation (a required file that is missing), not pass vacuously.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from tools import control_audit
 
