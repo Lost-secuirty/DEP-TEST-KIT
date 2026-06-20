@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -33,18 +34,30 @@ ROOT = Path(__file__).resolve().parent.parent
 FLAVORS = ("lib", "integration", "ai")
 
 
+def _resolve(cmd: list[str]) -> list[str]:
+    # Require a non-empty list of string tokens and resolve the executable to an
+    # absolute path. With shell=False (explicit below) argv is handed to the
+    # program directly — never a shell — so internally-built refs/paths cannot
+    # inject OS commands; this hardens against a non-str token or a PATH-shadowed
+    # binary.
+    if not cmd or not all(isinstance(a, str) for a in cmd):
+        raise ValueError("command must be a non-empty list of strings")
+    return [shutil.which(cmd[0]) or cmd[0], *cmd[1:]]
+
+
 def sh(cmd: list[str]) -> str:
     try:
         # Force UTF-8 decode: on Windows the default locale codec is cp1252, which
         # crashes on UTF-8 diff content (non-ASCII in docs/code). Linux/CI default UTF-8.
         return subprocess.run(
-            cmd,
+            _resolve(cmd),
             cwd=ROOT,
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
             check=False,
+            shell=False,
         ).stdout
     except Exception:
         return ""
@@ -52,7 +65,12 @@ def sh(cmd: list[str]) -> str:
 
 def try_ok(cmd: list[str]) -> bool:
     try:
-        return subprocess.run(cmd, cwd=ROOT, capture_output=True, check=False).returncode == 0
+        return (
+            subprocess.run(
+                _resolve(cmd), cwd=ROOT, capture_output=True, check=False, shell=False
+            ).returncode
+            == 0
+        )
     except Exception:
         return False
 
