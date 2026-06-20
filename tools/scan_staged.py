@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import subprocess
 import sys
 
@@ -59,15 +60,23 @@ def scan_line(line: str) -> list[str]:
 
 
 def _git(args: list[str]) -> str:
+    # Resolve the git binary to an absolute path and require string args, so a
+    # caller cannot smuggle a non-str token into argv or a PATH-shadowed binary.
+    # shell=False (made explicit) means argv is handed to git directly, never
+    # through a shell, so diff refs/paths can never inject an OS command.
+    if not all(isinstance(a, str) for a in args):
+        raise TypeError("git args must all be strings")
+    git = shutil.which("git") or "git"
     # Force UTF-8 decode: on Windows the default locale codec is cp1252, which
     # crashes on UTF-8 diff content (non-ASCII in docs/code). Linux/CI default UTF-8.
     out = subprocess.run(
-        ["git"] + args,
+        [git, *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
         check=False,
+        shell=False,
     )
     return out.stdout
 
@@ -133,12 +142,12 @@ def _run_self_test() -> int:
     must_block = [aws, ghp, pem, slack, gkey, generic, client_secret, access_token]
 
     must_clean = [
-        "this line mentions an api_key in passing",     # keyword, no value
-        "uses ${{ secrets.GITHUB_TOKEN }} in CI",       # CI ref, not a literal
+        "this line mentions an api_key in passing",  # keyword, no value
+        "uses ${{ secrets.GITHUB_TOKEN }} in CI",  # CI ref, not a literal
         "a normal line of prose about tokens",
         "refresh_token_url" + " = " + "'https://idp.example.com/oauth'",  # URL value, not a secret
         "hash" + " = " + "'sha256:" + ("e" * 64) + "'",  # uv.lock digest, not a secret
-        aws + "  " + _ALLOWLIST_MARKER,                 # escape hatch
+        aws + "  " + _ALLOWLIST_MARKER,  # escape hatch
     ]
 
     fails = 0
