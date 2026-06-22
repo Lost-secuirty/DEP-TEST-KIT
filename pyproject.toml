@@ -48,6 +48,15 @@ lib = [
   # tls_verification (oracles hinge on the real requests types, not httpx). >=2.32.4 clears
   # CVE-2024-47081 (.netrc credential leak) and CVE-2024-35195 (verify=False cache).
   "requests>=2.32.4",
+  # jinja2 autoescape + SandboxedEnvironment for jinja_autoescape_xss / jinja_ssti_sandbox
+  # (XSS / SSTI). Transitive via flask; promoted to a direct import. >=3.1.6 = current line.
+  "jinja2>=3.1.6",
+  # graphql-core (import name: graphql) for graphql_depth_limit — query depth-limit fence.
+  "graphql-core>=3.2",
+  # defusedxml (import name: defusedxml) for xxe_defense — XXE / entity-expansion refusal.
+  "defusedxml>=0.7.1",
+  # PyYAML (import name: yaml) for yaml_deserialization — safe_load vs the unsafe full loader.
+  "pyyaml>=6.0.2",
 ]
 # real-service harnesses (spin ephemeral containers; need Docker at run time)
 integration = [
