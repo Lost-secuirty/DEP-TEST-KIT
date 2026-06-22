@@ -41,6 +41,9 @@ lib = [
   # jsonschema Draft validation for cookie_security / security_headers / eu_ai_act_logging
   # (header & field-completeness contracts) and nosql_injection (scalar-input enforcement).
   "jsonschema>=4.21",
+  # idna host canonicalization for cors_misconfig / open_redirect / ssrf_url_guard /
+  # unicode_account_confusion. >=3.15 clears CVE-2026-45409 (ReDoS in idna.encode).
+  "idna>=3.15",
 ]
 # real-service harnesses (spin ephemeral containers; need Docker at run time)
 integration = [
