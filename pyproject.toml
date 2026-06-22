@@ -38,6 +38,9 @@ lib = [
   # werkzeug.security.safe_join for the path_traversal harness (CWE-22). >=3.0.6 clears
   # CVE-2024-49766 (Windows UNC traversal in safe_join) and CVE-2024-34069 (debugger RCE).
   "werkzeug>=3.0.6",
+  # jsonschema Draft validation for cookie_security / security_headers / eu_ai_act_logging
+  # (header & field-completeness contracts) and nosql_injection (scalar-input enforcement).
+  "jsonschema>=4.21",
 ]
 # real-service harnesses (spin ephemeral containers; need Docker at run time)
 integration = [
