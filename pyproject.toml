@@ -44,6 +44,10 @@ lib = [
   # idna host canonicalization for cors_misconfig / open_redirect / ssrf_url_guard /
   # unicode_account_confusion. >=3.15 clears CVE-2026-45409 (ReDoS in idna.encode).
   "idna>=3.15",
+  # requests Session/HTTPAdapter/exception types for crlf_header_injection / failopen_authz /
+  # tls_verification (oracles hinge on the real requests types, not httpx). >=2.32.4 clears
+  # CVE-2024-47081 (.netrc credential leak) and CVE-2024-35195 (verify=False cache).
+  "requests>=2.32.4",
 ]
 # real-service harnesses (spin ephemeral containers; need Docker at run time)
 integration = [
